@@ -1,0 +1,247 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyNZxr0TYUKDiB7zrtZjNuzr",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/AsaelOC/PYTHON/blob/main/Reflejos%20de%20imagen\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Reflejo Completo BMP (Horizontal + Vertical) usando pila\n",
+        "\n",
+        "# Abrir los archivos para lectura (origen) y escritura (destino)\n",
+        "file = open(\"./images/volcan.bmp\", \"rb\")\n",
+        "fileo = open(\"./images/volcan_reflejo_Compuesto.bmp\", \"wb\")\n",
+        "\n",
+        "# Leer y escribir la metadata del BMP (primeros 54 bytes)\n",
+        "metadata = file.read(54)\n",
+        "fileo.write(metadata)\n",
+        "\n",
+        "# Obtener las dimensiones de la imagen\n",
+        "file.seek(18)\n",
+        "width_bytes = file.read(4)\n",
+        "width = int.from_bytes(width_bytes, byteorder='little')\n",
+        "file.seek(22)\n",
+        "height_bytes = file.read(4)\n",
+        "height = int.from_bytes(height_bytes, byteorder='little')\n",
+        "\n",
+        "# Volver al byte 54 donde empieza la información de los píxeles\n",
+        "file.seek(54, 0)\n",
+        "\n",
+        "# Leer las filas de la imagen y almacenarlas en una pila (lista)\n",
+        "row_size = width * 3\n",
+        "padding = (4 - (row_size % 4)) % 4\n",
+        "\n",
+        "pila_filas = []\n",
+        "\n",
+        "for y in range(height):\n",
+        "    fila = file.read(row_size)\n",
+        "    file.read(padding)\n",
+        "\n",
+        "    # Reflejar la fila horizontalmente (invertir el orden de los píxeles)\n",
+        "    pila_pixeles = []\n",
+        "    for x in range(width):\n",
+        "        pixel = fila[x*3:(x+1)*3]\n",
+        "        pila_pixeles.append(pixel)\n",
+        "\n",
+        "    fila_reflejada = bytearray()\n",
+        "    while pila_pixeles:\n",
+        "        fila_reflejada += pila_pixeles.pop()  # Extraer píxeles en orden inverso\n",
+        "\n",
+        "    pila_filas.append(fila_reflejada)  # Agregar la fila reflejada a la pila\n",
+        "\n",
+        "# Extraer las filas de la pila en orden invertido (reflejo vertical) y escribirlas en el archivo\n",
+        "while pila_filas:\n",
+        "    fila_invertida = pila_filas.pop()\n",
+        "    fileo.write(fila_invertida)\n",
+        "    fileo.write(b'\\x00' * padding)  # Escribir el padding\n",
+        "\n",
+        "file.close()\n",
+        "fileo.close()\n",
+        "\n",
+        "print(\"Imagen reflejada horizontal y verticalmente usando pila creada exitosamente.\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "WTi8ZCL98Oea",
+        "outputId": "abe616c8-e759-46b3-f188-1d16d0455cb4"
+      },
+      "execution_count": 4,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Imagen reflejada horizontal y verticalmente usando pila creada exitosamente.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Reflejo Horizontal BMP usando pila\n",
+        "\n",
+        "# Abrir los archivos para lectura (origen) y escritura (destino)\n",
+        "file = open(\"./images/volcan.bmp\", \"rb\")\n",
+        "fileo = open(\"./images/volcan_reflejo_H.bmp\", \"wb\")\n",
+        "\n",
+        "# Leer y escribir la metadata del BMP (primeros 54 bytes)\n",
+        "metadata = file.read(54)\n",
+        "fileo.write(metadata)\n",
+        "\n",
+        "# Obtener las dimensiones de la imagen\n",
+        "file.seek(18)\n",
+        "width_bytes = file.read(4)\n",
+        "width = int.from_bytes(width_bytes, byteorder='little')\n",
+        "file.seek(22)\n",
+        "height_bytes = file.read(4)\n",
+        "height = int.from_bytes(height_bytes, byteorder='little')\n",
+        "\n",
+        "# Volver al byte 54 donde empieza la información de los píxeles\n",
+        "file.seek(54, 0)\n",
+        "\n",
+        "# Leer las filas de la imagen y reflejarlas horizontalmente usando pilas\n",
+        "row_size = width * 3  # Cada píxel tiene 3 bytes (BGR)\n",
+        "padding = (4 - (row_size % 4)) % 4  # Padding para hacer las filas múltiplos de 4 bytes\n",
+        "\n",
+        "for y in range(height):\n",
+        "    fila = file.read(row_size)  # Leer una fila completa\n",
+        "    file.read(padding)  # Saltar el padding\n",
+        "\n",
+        "    # Usar una pila para reflejar la fila horizontalmente\n",
+        "    pila_pixeles = []\n",
+        "    for x in range(width):\n",
+        "        pixel = fila[x * 3:(x + 1) * 3]  # Extraer un píxel (3 bytes BGR)\n",
+        "        pila_pixeles.append(pixel)  # Agregar el píxel a la pila\n",
+        "\n",
+        "    fila_reflejada = bytearray()\n",
+        "    while pila_pixeles:\n",
+        "        fila_reflejada += pila_pixeles.pop()  # Extraer los píxeles en orden inverso (reflejo horizontal)\n",
+        "\n",
+        "    # Escribir la fila reflejada en el nuevo archivo\n",
+        "    fileo.write(fila_reflejada)\n",
+        "    fileo.write(b'\\x00' * padding)  # Escribir el padding\n",
+        "\n",
+        "file.close()\n",
+        "fileo.close()\n",
+        "\n",
+        "print(\"Imagen reflejada horizontalmente usando pila creada exitosamente.\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "Xb_dXFd88DbR",
+        "outputId": "b5a49973-469a-41a0-fb8c-ac0c8a7cf72c"
+      },
+      "execution_count": 3,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Imagen reflejada horizontalmente usando pila creada exitosamente.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 2,
+      "metadata": {
+        "id": "qQRlMQhBucQ-",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "f04dc37a-4ec1-4327-8374-e6d7c6c707ca"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Imagen reflejada verticalmente usando pila creada exitosamente.\n"
+          ]
+        }
+      ],
+      "source": [
+        "# Reflejo Vertical BMP usando pila\n",
+        "\n",
+        "# Abrir los archivos para lectura (origen) y escritura (destino)\n",
+        "file = open(\"./images/volcan.bmp\", \"rb\")\n",
+        "fileo = open(\"./images/volcan_reflejo_V.bmp\", \"wb\")\n",
+        "\n",
+        "# Leer y escribir la metadata del BMP (primeros 54 bytes)\n",
+        "metadata = file.read(54)\n",
+        "fileo.write(metadata)\n",
+        "\n",
+        "# Obtener las dimensiones de la imagen\n",
+        "file.seek(18)\n",
+        "width_bytes = file.read(4)\n",
+        "width = int.from_bytes(width_bytes, byteorder='little')\n",
+        "file.seek(22)\n",
+        "height_bytes = file.read(4)\n",
+        "height = int.from_bytes(height_bytes, byteorder='little')\n",
+        "\n",
+        "# Volver al byte 54 donde empieza la información de los píxeles\n",
+        "file.seek(54, 0)\n",
+        "\n",
+        "# Leer las filas de la imagen y almacenarlas en una pila (lista)\n",
+        "row_size = width * 3\n",
+        "padding = (4 - (row_size % 4)) % 4  # Padding para hacer las filas múltiplos de 4 bytes\n",
+        "\n",
+        "pila_filas = []\n",
+        "\n",
+        "for y in range(height):\n",
+        "    fila = file.read(row_size)\n",
+        "    file.read(padding)  # Saltar el padding\n",
+        "    pila_filas.append(fila)  # Agregar cada fila a la pila\n",
+        "\n",
+        "# Extraer las filas de la pila en orden invertido usando pop() y escribirlas en el archivo\n",
+        "while pila_filas:\n",
+        "    fila_invertida = pila_filas.pop()  # Extraer la fila de la pila\n",
+        "    fileo.write(fila_invertida)  # Escribir la fila en el nuevo archivo\n",
+        "    fileo.write(b'\\x00' * padding)  # Escribir el padding\n",
+        "\n",
+        "file.close()\n",
+        "fileo.close()\n",
+        "\n",
+        "print(\"Imagen reflejada verticalmente usando pila creada exitosamente.\")"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "jkSlxbBZu2ym"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
